@@ -1,0 +1,38 @@
+import numpy as np  
+import pandas as pd  
+import matplotlib.pyplot as plt  
+import seaborn as sns  
+from sklearn.model_selection import train_test_split  
+from sklearn.preprocessing import StandardScaler  
+from sklearn.metrics import accuracy_score, confusion_matrix  
+from keras.models import Sequential  
+from keras.layers import Dense  
+df = pd.read_csv(’Churn_Modelling.csv’)  
+df.head()  
+df = df.drop(columns=[’CustomerId’, ’Surname’])  
+df = pd.get_dummies(df, drop_first=True)  
+X = df.drop(columns=[’Exited’])  # Exited is the target variable  
+y = df[’Exited’]  
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)  
+scaler = StandardScaler()  
+X_train = scaler.fit_transform(X_train)  
+X_test = scaler.transform(X_test)  
+model = Sequential()  
+model.add(Dense(units=64, activation=’relu’, input_dim=X_train.shape[1]))  
+model.add(Dense(units=64, activation=’relu’))  
+model.add(Dense(units=1, activation=’sigmoid’))  
+model.compile(optimizer=’adam’, loss=’binary_crossentropy’, metrics=[’accuracy’])  
+history = model.fit(X_train, y_train, epochs=25, batch_size=32, validation_data=(X_test, y_test))  
+y_pred = (model.predict(X_test) > 0.5)  
+accuracy = accuracy_score(y_test, y_pred)  
+print(f’Accuracy: {accuracy * 100:.2f}%’)  
+cm = confusion_matrix(y_test, y_pred)  
+print(’Confusion Matrix:’)  
+print(cm)  
+plt.figure(figsize=(6, 6))  
+sns.heatmap(cm, annot=True, fmt=’d’, cmap=’Blues’, cbar=False,   
+xticklabels=[’Not Churn’, ’Churn’], yticklabels=[’Not Churn’, ’Churn’])  
+plt.title(’Confusion Matrix’)  
+plt.ylabel(’Actual’)  
+plt.xlabel(’Predicted’)  
+plt.show()  
